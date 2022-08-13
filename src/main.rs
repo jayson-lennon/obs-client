@@ -12,6 +12,12 @@ struct Args {
     #[clap(subcommand)]
     command: Command,
 
+    #[clap(env = "OBSWS_ADDR")]
+    address: String,
+
+    #[clap(env = "OBSWS_PORT")]
+    port: u16,
+
     /// Password to connect to OBS
     #[clap(short, long, env = "OBSWS_PASSWORD")]
     password: Option<String>,
@@ -74,7 +80,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     // Connect to the OBS instance through obs-websocket.
-    let client = Client::connect("192.168.1.98", 4455, args.password).await?;
+    let client = Client::connect(args.address, args.port, args.password).await?;
 
     match args.command {
         Command::Record => record(&client).await?,
