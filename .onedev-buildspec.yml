@@ -1,0 +1,19 @@
+version: 17
+jobs:
+- name: Push to GitHub
+  steps:
+  - !PushRepository
+    name: Push to GitHub
+    remoteUrl: https://github.com/jayson-lennon/obs-client
+    passwordSecret: github-sync
+    withLfs: false
+    force: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  triggers:
+  - !BranchUpdateTrigger {}
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  cpuRequirement: 250
+  memoryRequirement: 256
+  timeout: 3600
