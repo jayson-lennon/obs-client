@@ -1,0 +1,17 @@
+[package]
+name = "obs-client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.61"
+clap = { version = "3.2.17", features = ["derive", "env"] }
+color-eyre = "0.6.2"
+dotenv = "0.15.0"
+obws = { git = "https://github.com/dnaka91/obws.git", branch = "v5-api" }
+tokio = { version = "1.20.1", features = ["full"] }
+tracing = "0.1.36"
+tracing-error = "0.2.0"
+tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
