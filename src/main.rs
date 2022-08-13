@@ -1,7 +1,10 @@
-use anyhow::Result;
 use clap::{Parser, Subcommand};
+use eyre::eyre;
 use obws::Client;
-use tracing::{event, info, Level};
+use std::{future::Future, pin::Pin, time::Duration};
+use tracing::{debug, error, event, info, Level};
+
+type Result<T> = std::result::Result<T, color_eyre::Report>;
 
 const LOGSPEC: [&str; 1] = ["obs_client"];
 
@@ -32,14 +35,12 @@ enum Command {
 }
 
 async fn record(client: &Client) -> Result<()> {
-    event!(Level::INFO, "starting...");
     client.recording().start().await?;
     info!("recording");
     Ok(())
 }
 
 async fn stop(client: &Client) -> Result<()> {
-    info!("stopping...");
     client.recording().stop().await?;
     info!("stopped recording");
     Ok(())
@@ -82,9 +83,37 @@ async fn main() -> Result<()> {
     // Connect to the OBS instance through obs-websocket.
     let client = Client::connect(args.address, args.port, args.password).await?;
 
+    let for_duration = Duration::from_secs(2);
+
     match args.command {
-        Command::Record => record(&client).await?,
-        Command::Stop => stop(&client).await?,
+        Command::Record => {
+            event!(Level::INFO, "starting...");
+            let now = std::time::Instant::now();
+            loop {
+                if now.elapsed() >= for_duration {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(100));
+                if record(&client).await.is_ok() {
+                    return Ok(());
+                }
+            }
+            error!("failed to issue 'record' command");
+        }
+        Command::Stop => {
+            info!("stopping...");
+            let now = std::time::Instant::now();
+            loop {
+                if now.elapsed() >= for_duration {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(100));
+                if stop(&client).await.is_ok() {
+                    return Ok(());
+                }
+            }
+            error!("failed to issue 'stop' command");
+        }
     }
 
     Ok(())
